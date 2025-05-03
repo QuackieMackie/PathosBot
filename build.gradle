@@ -1,9 +1,7 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.hidetake.ssh' version '2.11.2'
-    id 'com.gradleup.shadow' version '8.3.1'
-    id("co.uzzu.dotenv.gradle") version "4.0.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = 'io.github.quackiemackie.wondie'
@@ -14,64 +12,43 @@ repositories {
 }
 
 dependencies {
-    implementation 'net.dv8tion:JDA:5.2.1'
-    implementation 'io.github.cdimascio:java-dotenv:5.2.2'
+    // https://mvnrepository.com/artifact/net.dv8tion/JDA
+    implementation("net.dv8tion:JDA:5.5.0")
 
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.16'
-    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.16'
+    // https://mvnrepository.com/artifact/io.prometheus/simpleclient
+    implementation("io.prometheus:simpleclient:0.16.0")
+    // https://mvnrepository.com/artifact/io.prometheus/simpleclient_hotspot
+    implementation("io.prometheus:simpleclient_hotspot:0.16.0")
+    // https://mvnrepository.com/artifact/io.prometheus/simpleclient_httpserver
+    implementation("io.prometheus:simpleclient_httpserver:0.16.0")
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // https://mvnrepository.com/artifact/com.github.oshi/oshi-core
+    implementation("com.github.oshi:oshi-core:6.8.1")
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    implementation("ch.qos.logback:logback-classic:1.5.18")
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
 }
 
 application {
     mainClass = 'io.github.quackiemackie.wondie.Main'
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': application.mainClass.get()
+    }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.incremental = true
     sourceCompatibility = '21'
-}
-
-shadowJar {
-    archiveBaseName.set(project.name)
-    archiveClassifier.set("fat")
-    archiveVersion.set(version)
-}
-
-test {
-    useJUnitPlatform()
-    testLogging {
-        showStandardStreams = true
-    }
-
-    doLast {
-        ssh.run {
-            session(remotes.pi) {
-                execute 'echo Hello World'
-            }
-        }
-    }
-}
-
-remotes {
-    pi {
-        host = System.getenv().PI_HOST
-        user = System.getenv().PI_USER
-        identity = file(System.getProperty('user.home') + '/.ssh/id_rsa')
-    }
-}
-
-tasks.register('testConnection') {
-    group = 'Pathos Bot'
-    description = ''
-
-    doLast {
-        ssh.run {
-            session(remotes.pi) {
-                execute 'echo Hello World!'
-            }
-        }
-    }
 }
